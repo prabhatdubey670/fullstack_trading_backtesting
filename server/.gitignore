@@ -1,0 +1,9 @@
+/.env
+/.venv
+/btc-5am-7am-backtest.xlsx
+/btc-7pm-8pm-backtest.xlsx
+/btc-9pm-9am-backtest.xlsx
+/btc_usdt_ohlcv_9_30pm_ist.xlsx
+/historical_data_btc.xlsx
+/historical_data_o.xlsx
+/__pycache__
