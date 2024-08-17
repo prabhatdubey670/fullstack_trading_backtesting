@@ -6,19 +6,19 @@ from atmiv import atm_iv  # Ensure atmiv module is correctly installed
 # Initialize Tkinter (remove if not needed)
 
 
-date = "090824"
+date = "140824"
 
 # Define the symbols and URL
-call_btc = "C-BTC-58200-090824"
-put_btc = "P-BTC-58000-090824"
-call_eth = "C-ETH-2480-090824"
-put_eth = "P-ETH-2460-090824"
+call_btc = "C-BTC-59400-140824"
+put_btc = "P-BTC-59000-140824"
+call_eth = "C-ETH-2680-140824"
+put_eth = "P-ETH-2640-140824"
 
 # Buy prices
-Buy_call_btc_Price = 732
-Buy_put_btc_Price = 782
-Buy_call_eth_Price = 34.5  # Fixed typo here
-Buy_put_eth_Price = 38.5
+Buy_call_btc_Price = 635
+Buy_put_btc_Price = 648
+Buy_call_eth_Price = 29.7  # Fixed typo here
+Buy_put_eth_Price = 34.1
 
 buy_total = Buy_call_btc_Price + Buy_put_btc_Price + Buy_call_eth_Price + Buy_put_eth_Price
 
