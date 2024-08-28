@@ -1,6 +1,5 @@
 import requests
 from time import sleep
-import tkinter  # Ensure tkinter is installed if you plan to use it
 from atmiv import atm_iv  # Ensure atmiv module is correctly installed
 
 # Initialize Tkinter (remove if not needed)
