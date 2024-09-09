@@ -5,6 +5,7 @@ from datetime import timezone
 import math
 from pymongo import MongoClient
 import openpyxl
+
 def get_ohlc_optiondata(optiontype, index, resolution, start_time_date, hours, collection, gap):
     
     def get_historical_atm(unix_start, resolution, index):
@@ -84,20 +85,19 @@ def get_ohlc_optiondata(optiontype, index, resolution, start_time_date, hours, c
 # MongoDB setup
 client = MongoClient('mongodb://localhost:27017/')
 db = client['ohlc_data']
-## be very carefull here 
-collection = db['C-ETH-2M-7-PM-1h']
+collection = db['P-BTC-2M-12-PM-30min']
 
 # Looping the function get_ohlc_optiondata for the next 30 days
-start_date = '01-05-2024 07:30 PM'
-end_date = '31-07-2024 07:30 PM'
+start_date = '01-05-2024 12:30 PM'
+end_date = '31-08-2024 12:30 PM'
 
 current_date = datetime.datetime.strptime(start_date, "%d-%m-%Y %I:%M %p")
 end_date = datetime.datetime.strptime(end_date, "%d-%m-%Y %I:%M %p")
 
 while current_date <= end_date:
     start_time_date = current_date.strftime("%d-%m-%Y %I:%M %p")
-    get_ohlc_optiondata('C', 'ETH', '1h', start_time_date, 12, collection, 20)
+    try:
+        get_ohlc_optiondata('P', 'BTC', '15m', start_time_date, 4, collection, 200)
+    except ValueError as e:
+        print(f"Error on {start_time_date}: {e}. Trying next date.")
     current_date += datetime.timedelta(days=1)
-
-
-
