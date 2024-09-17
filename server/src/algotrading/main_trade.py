@@ -120,8 +120,8 @@ def schedule_order(symbol, gap, size, date, order_time):
     atm_value, call_strike, put_strike = find_atm(symbol, gap)
 
     # Get product IDs
-    call_product_id = get_product_id("C", "BTC", call_strike, date)
-    put_product_id = get_product_id("P", "BTC", put_strike, date)
+    call_product_id = get_product_id("C", "ETH", call_strike, date)
+    put_product_id = get_product_id("P", "ETH", put_strike, date)
 
     def place_orders():
         if call_product_id:
