@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter 
 from tkinter import messagebox
 import requests
 import time
@@ -165,52 +165,3 @@ def schedule_order(symbol, size, plus_minus, date, order_time):
     else:
         messagebox.showerror("Error", "The scheduled time is in the past!")
 
-# Tkinter setup
-def submit_form():
-    symbol = symbol_entry.get()
-
-    size = int(size_entry.get())
-    plus_minus = plus_minus_entry.get()  # Corrected to fetch from plus_minus_entry
-    date = date_entry.get()
-    order_time = time_entry.get()
-  
-    schedule_order(symbol, size, plus_minus, date, order_time)
-
-# Creating the Tkinter GUI
-root = tk.Tk()
-
-root.title("Options Order Scheduler")
-
-# Symbol input
-tk.Label(root, text="Symbol:").grid(row=0, column=0)
-symbol_entry = tk.Entry(root)
-symbol_entry.grid(row=0, column=1)
-
-# Gap input
-
-# Size input
-tk.Label(root, text="Order Size:").grid(row=1, column=0)
-size_entry = tk.Entry(root)
-size_entry.grid(row=1, column=1)
-
-# Plus Minus input (Position 1 above and 1 below atm)
-tk.Label(root, text="Plus Minus:").grid(row=2, column=0)
-plus_minus_entry = tk.Entry(root)
-plus_minus_entry.grid(row=2, column=1)
-
-# Date input
-tk.Label(root, text="Expiration Date (DDMMYY):").grid(row=3, column=0)
-date_entry = tk.Entry(root)
-date_entry.grid(row=3, column=1)
-
-# Time input for scheduling
-tk.Label(root, text="Order Time (dd-mm-yy HH:MM:SS):").grid(row=4, column=0)
-time_entry = tk.Entry(root)
-time_entry.grid(row=4, column=1)
-
-# Submit button
-submit_button = tk.Button(root, text="Schedule Order", command=submit_form)
-submit_button.grid(row=5, column=1)
-
-# Run the Tkinter loop
-root.mainloop()
