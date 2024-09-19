@@ -26,16 +26,23 @@ db = client['trading_db']
 orders_collection = db['orders']
 
 # Function to find the ATM (At-The-Money) value, call strike, and put strike
-def find_atm(symbol, gap):
+def find_atm(symbol, plus_minus):
     response = requests.get(f"https://cdn.india.deltaex.org/v2/tickers/{symbol}")
     ticker_info = response.json()
     
-    btc_price = ticker_info['result']['close']
-    atm_value = int(math.floor(btc_price / gap)) * gap
-    
-    call_strike = atm_value + gap
-    put_strike = atm_value - gap
-    
+    price = ticker_info['result']['close']
+    if symbol == 'BTCUSD':
+        gap = 200
+    elif symbol == 'ETHUSD':
+        gap = 20
+        
+    atm_value = int(math.floor(price / gap)) * gap
+    if plus_minus == 'Yes':        
+        call_strike = atm_value + gap
+        put_strike = atm_value - gap
+    else:
+        call_strike = atm_value
+        put_strike = atm_value
     return atm_value, call_strike, put_strike
 
 # Function to fetch the product ID
@@ -100,12 +107,12 @@ def create_order(product_id, size, side):
             'request_data': order_data,
             'response_data': order_response
         }
-        orders_collection.insert_one(order_info)
 
         print(order_response)
 
         if order_response.get('success'):
             print("Order placed successfully!")
+            orders_collection.insert_one(order_response)
             break
 
         sleep(retry_delay)
@@ -114,28 +121,41 @@ def create_order(product_id, size, side):
     if not order_response.get('success'):
         print("Failed to place the order after multiple attempts.")
 
+# Corrected save_placed_order function
+def save_placed_order(product_id, size, side, type_option, symbol, strike, expirydate):
+    document = {
+        "product_id": product_id,
+        "current_date_time": datetime.now().strftime("%d-%m-%y %H:%M:%S"),  # Correct use of strftime
+        "size": size,
+        "buy_sell": side,
+        "type": type_option,
+        "symbol": symbol,
+        "strike": strike,
+        "expiry": expirydate,
+    }
+    # orders_collection.insert_one(document)  # Use the correct collection reference
 
 # Function to schedule the order
-def schedule_order(symbol, gap, size, date, order_time):
-    atm_value, call_strike, put_strike = find_atm(symbol, gap)
+def schedule_order(symbol, size, plus_minus, date, order_time):
+    atm_value, call_strike, put_strike = find_atm(symbol,  plus_minus)
 
     # Get product IDs
-    call_product_id = get_product_id("C", "ETH", call_strike, date)
-    put_product_id = get_product_id("P", "ETH", put_strike, date)
+    call_product_id = get_product_id("C", symbol.replace('USD', ''), call_strike, date)
+    put_product_id = get_product_id("P", symbol.replace('USD', ''), put_strike, date)
 
     def place_orders():
         if call_product_id:
             create_order(call_product_id, size, 'buy')
+            save_placed_order(call_product_id, size, 'buy', 'C', symbol, call_strike, date)
+            
         if put_product_id:
             create_order(put_product_id, size, 'buy')
+            save_placed_order(put_product_id, size, 'buy', 'P', symbol, put_strike, date)
         messagebox.showinfo("Order Status", "Orders placed successfully!")
 
     # Calculate time difference
-
     current_time = datetime.now()
-    # Convert the string with both date and time to a datetime object
     target_time = datetime.strptime(order_time, "%d-%m-%y %H:%M:%S")
-    # Calculate the difference in seconds
     delay_seconds = (target_time - current_time).total_seconds()
 
     # If target time is in the future, schedule the orders
@@ -145,20 +165,20 @@ def schedule_order(symbol, gap, size, date, order_time):
     else:
         messagebox.showerror("Error", "The scheduled time is in the past!")
 
-
 # Tkinter setup
 def submit_form():
     symbol = symbol_entry.get()
-    gap = int(gap_entry.get())
+
     size = int(size_entry.get())
+    plus_minus = plus_minus_entry.get()  # Corrected to fetch from plus_minus_entry
     date = date_entry.get()
     order_time = time_entry.get()
-
-    schedule_order(symbol, gap, size, date, order_time)
-
+  
+    schedule_order(symbol, size, plus_minus, date, order_time)
 
 # Creating the Tkinter GUI
 root = tk.Tk()
+
 root.title("Options Order Scheduler")
 
 # Symbol input
@@ -167,14 +187,16 @@ symbol_entry = tk.Entry(root)
 symbol_entry.grid(row=0, column=1)
 
 # Gap input
-tk.Label(root, text="Gap:").grid(row=1, column=0)
-gap_entry = tk.Entry(root)
-gap_entry.grid(row=1, column=1)
 
 # Size input
-tk.Label(root, text="Order Size:").grid(row=2, column=0)
+tk.Label(root, text="Order Size:").grid(row=1, column=0)
 size_entry = tk.Entry(root)
-size_entry.grid(row=2, column=1)
+size_entry.grid(row=1, column=1)
+
+# Plus Minus input (Position 1 above and 1 below atm)
+tk.Label(root, text="Plus Minus:").grid(row=2, column=0)
+plus_minus_entry = tk.Entry(root)
+plus_minus_entry.grid(row=2, column=1)
 
 # Date input
 tk.Label(root, text="Expiration Date (DDMMYY):").grid(row=3, column=0)
@@ -182,7 +204,7 @@ date_entry = tk.Entry(root)
 date_entry.grid(row=3, column=1)
 
 # Time input for scheduling
-tk.Label(root, text="Order Time (%d-%m-%y %H:%M:%S)").grid(row=4, column=0)
+tk.Label(root, text="Order Time (dd-mm-yy HH:MM:SS):").grid(row=4, column=0)
 time_entry = tk.Entry(root)
 time_entry.grid(row=4, column=1)
 
