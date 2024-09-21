@@ -1,5 +1,3 @@
-import customtkinter 
-from tkinter import messagebox
 import requests
 import time
 import hmac
@@ -8,6 +6,7 @@ import json
 from time import sleep
 from dotenv import load_dotenv
 import os
+import pymongo
 from pymongo import MongoClient
 import math
 import threading
@@ -120,48 +119,3 @@ def create_order(product_id, size, side):
 
     if not order_response.get('success'):
         print("Failed to place the order after multiple attempts.")
-
-# Corrected save_placed_order function
-def save_placed_order(product_id, size, side, type_option, symbol, strike, expirydate):
-    document = {
-        "product_id": product_id,
-        "current_date_time": datetime.now().strftime("%d-%m-%y %H:%M:%S"),  # Correct use of strftime
-        "size": size,
-        "buy_sell": side,
-        "type": type_option,
-        "symbol": symbol,
-        "strike": strike,
-        "expiry": expirydate,
-    }
-    # orders_collection.insert_one(document)  # Use the correct collection reference
-
-# Function to schedule the order
-def schedule_order(symbol, size, plus_minus, date, order_time):
-    atm_value, call_strike, put_strike = find_atm(symbol,  plus_minus)
-
-    # Get product IDs
-    call_product_id = get_product_id("C", symbol.replace('USD', ''), call_strike, date)
-    put_product_id = get_product_id("P", symbol.replace('USD', ''), put_strike, date)
-
-    def place_orders():
-        if call_product_id:
-            create_order(call_product_id, size, 'buy')
-            save_placed_order(call_product_id, size, 'buy', 'C', symbol, call_strike, date)
-            
-        if put_product_id:
-            create_order(put_product_id, size, 'buy')
-            save_placed_order(put_product_id, size, 'buy', 'P', symbol, put_strike, date)
-        messagebox.showinfo("Order Status", "Orders placed successfully!")
-
-    # Calculate time difference
-    current_time = datetime.now()
-    target_time = datetime.strptime(order_time, "%d-%m-%y %H:%M:%S")
-    delay_seconds = (target_time - current_time).total_seconds()
-
-    # If target time is in the future, schedule the orders
-    if delay_seconds > 0:   
-        threading.Timer(delay_seconds, place_orders).start()
-        messagebox.showinfo("Scheduled", f"Order scheduled for {order_time}")
-    else:
-        messagebox.showerror("Error", "The scheduled time is in the past!")
-
