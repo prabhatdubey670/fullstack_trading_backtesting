@@ -1,30 +1,30 @@
 from buy_side import schedule_order
 import customtkinter as ctk
-import sys
+# import sys
 
 def run_gui():
     print("Initialising software...")
 
     # Function to redirect print statements to the GUI
-    def log_message(message):
-        log_textbox.configure(state="normal")
-        log_textbox.insert("end", message + "\n")
-        log_textbox.configure(state="disabled")
-        log_textbox.yview('end')  # Scroll to the bottom
+    # def log_message(message):
+    #     log_textbox.configure(state="normal")
+    #     log_textbox.insert("end", message + "\n")
+    #     log_textbox.configure(state="disabled")
+    #     log_textbox.yview('end')  # Scroll to the bottom
 
     # Overriding the print function to redirect output to the log_message
-    class PrintLogger:
-        def write(self, message):
-            if message.strip() != "":
-                log_message(message)
-        def flush(self):
-            pass
+    # class PrintLogger:
+    #     def write(self, message):
+    #         if message.strip() != "":
+    #             log_message(message)
+    #     def flush(self):
+    #         pass
 
-    sys.stdout = PrintLogger()  # Redirect print statements to the log_message
+    # sys.stdout = PrintLogger()  # Redirect print statements to the log_message
 
     # ctkinter setup
     def submit_form():
-        log_message("Attempting to schedule order...")
+        print("Attempting to schedule order...")
         symbol = symbol_entry.get()
         size = int(size_entry.get())
         side = str(side_entry.get())
@@ -41,9 +41,9 @@ def run_gui():
             print(f"Above & below ATM: {plus_minus}")
             print(f"Expiry Date: {date}")
             print(f"Order Time: {order_time}")
-            log_message("Order successfully scheduled.")
+            print("Order successfully scheduled.")
         except Exception as e:
-            log_message(f"Error: {str(e)}")
+            print(f"Error: {str(e)}")
 
     # Creating the ctkinter GUI
     ctk.set_appearance_mode("dark")  # Sets the appearance mode to dark
@@ -65,7 +65,7 @@ def run_gui():
 
     # Side input
     ctk.CTkLabel(root, text="Buy or Sell :").grid(row=2, column=0, padx=10, pady=10)
-    side_entry = ctk.CTkComboBox(root)
+    side_entry = ctk.CTkEntry(root)
     side_entry.grid(row=2, column=1, padx=10, pady=10)
 
     # Plus Minus input

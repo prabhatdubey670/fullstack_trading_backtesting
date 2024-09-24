@@ -1,7 +1,7 @@
-from order_execution import create_order, get_product_id
+from order_execution import create_order, get_product_id , find_atm
 from datetime import datetime
 from tkinter import messagebox
-
+import threading
 
 def schedule_order(symbol, size,side, plus_minus, date, order_time):
     atm_value, call_strike, put_strike = find_atm(symbol,  plus_minus)
@@ -10,7 +10,7 @@ def schedule_order(symbol, size,side, plus_minus, date, order_time):
         call_product_id = get_product_id("C", symbol.replace('USD', ''), call_strike, date)
         put_product_id = get_product_id("P", symbol.replace('USD', ''), put_strike, date)
     if(side == 'sell'):
-        past_orders = orders_collection.findone()
+        past_orders = orders_collection.find_one()
         print(past_orders)
     # getting product id from mongodb for selling 
         
