@@ -1,6 +1,6 @@
 ## Algotrading and Data Analystics - Crypto & it's derivatives 
 
-#### This is an algo trading bot with api's from delta exchange platform , created using python and tkinter ( for gui ) 
+#### This is an algotrading order scheduler with api's from delta exchange platform , created using python and tkinter ( for gui ) 
 
 #### Used ohlc data from api to create the strategy and backtest it. 
 
