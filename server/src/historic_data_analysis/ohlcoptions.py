@@ -3,10 +3,10 @@ import pandas as pd
 import datetime
 from datetime import timezone
 import math
-from pymongo import MongoClient
+import mysql.connector
 import openpyxl
 
-def get_ohlc_optiondata(optiontype, index, resolution, start_time_date, hours, collection, gap):
+def get_ohlc_optiondata(optiontype, index, resolution, start_time_date, hours, cursor, connection, gap):
     
     def get_historical_atm(unix_start, resolution, index):
         start = unix_start - 3600
@@ -59,7 +59,7 @@ def get_ohlc_optiondata(optiontype, index, resolution, start_time_date, hours, c
     data = response.json().get('result', [])
     if not data:
         print(f"No data returned for {symbol} from {start_time_date}")
-        return  # Skip the rest if there's no data
+        return
     
     close_data = [{'time': entry['time'], 'close': entry['close']} for entry in data if 'time' in entry and 'close' in entry]
 
@@ -73,19 +73,56 @@ def get_ohlc_optiondata(optiontype, index, resolution, start_time_date, hours, c
     df['time'] = df['time'].dt.strftime('%H:%M:%S')
 
     date_data = {row['time']: row['close'] for _, row in df.iterrows()}
-    document = {
-        "expiry": end_time.strftime('%d-%m-%y'),
-        "atm_value": atm_value,
-        "data": date_data
-    }
-    collection.insert_one(document)
     
-    print(f"Data for {start_time_date} saved to MongoDB.")
+    # Insert into MySQL
+    expiry = end_time.strftime('%d-%m-%y')
+    
+    # Insert main record
+    insert_query = """
+    INSERT INTO ohlc_data (expiry, atm_value)
+    VALUES (%s, %s)
+    """
+    cursor.execute(insert_query, (expiry, atm_value))
+    record_id = cursor.lastrowid
 
-# MongoDB setup
-client = MongoClient('mongodb://localhost:27017/')
-db = client['ohlc_data']
-collection = db['P-BTC-2M-12-PM-30min']
+    # Insert time-price data
+    insert_price_query = """
+    INSERT INTO price_data (record_id, time_value, close_price)
+    VALUES (%s, %s, %s)
+    """
+    for time_val, price in date_data.items():
+        cursor.execute(insert_price_query, (record_id, time_val, price))
+    
+    connection.commit()
+    print(f"Data for {start_time_date} saved to MySQL.")
+
+# MySQL setup
+connection = mysql.connector.connect(
+    host="localhost",
+    user="your_username",
+    password="your_password",
+    database="ohlc_data"
+)
+cursor = connection.cursor()
+
+# Create tables if they don't exist
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS ohlc_data (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    expiry VARCHAR(8),
+    atm_value INT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS price_data (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    record_id BIGINT,
+    time_value VARCHAR(8),
+    close_price FLOAT,
+    FOREIGN KEY (record_id) REFERENCES ohlc_data(id)
+)
+""")
 
 # Looping the function get_ohlc_optiondata for the next 30 days
 start_date = '01-05-2024 12:30 PM'
@@ -97,7 +134,11 @@ end_date = datetime.datetime.strptime(end_date, "%d-%m-%Y %I:%M %p")
 while current_date <= end_date:
     start_time_date = current_date.strftime("%d-%m-%Y %I:%M %p")
     try:
-        get_ohlc_optiondata('P', 'BTC', '15m', start_time_date, 4, collection, 200)
+        get_ohlc_optiondata('P', 'BTC', '15m', start_time_date, 4, cursor, connection, 200)
     except ValueError as e:
         print(f"Error on {start_time_date}: {e}. Trying next date.")
     current_date += datetime.timedelta(days=1)
+
+# Close the connection
+cursor.close()
+connection.close()
